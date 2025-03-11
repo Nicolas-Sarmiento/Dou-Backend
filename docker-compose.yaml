@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    container_name: dou_code_backend
+    image: dou-code-backend
+    ports:
+      - "8000:8000" 
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/mi_base_datos
+
+  db:
+    image: postgres:16 
+    container_name: dou_code_db
+    restart: always
+    environment:
+      POSTGRES_USER: dou_code_dba
+      POSTGRES_PASSWORD: Ahri34@
+      POSTGRES_DB: dou_code
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

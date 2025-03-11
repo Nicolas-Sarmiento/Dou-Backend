@@ -1,3 +1,3 @@
 fn main() {
-    println!("Duo Back-End!");
+    println!("Servidor iniciado...");
 }
