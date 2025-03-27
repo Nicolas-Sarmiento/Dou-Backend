@@ -1,0 +1,5 @@
+FROM postgres:16
+ENV POSTGRES_DB dou_code_db
+ENV POSTGRES_USER: dou_code_dba
+ENV POSTGRES_PASSWORD: Ahri34@
+COPY ./schema.sql /docker-entrypoint-initdb.d/
