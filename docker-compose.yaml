@@ -1,12 +1,24 @@
 
 services:
-  backend:
+  auth_service:
     build: 
-      context: ./backend
-    container_name: dou_code_backend
-    image: dou-code-backend
+      context: ./services/auth_service
+    container_name: dou_code_auth_service
+    image: dou-code-auth_service
     ports:
       - "8000:8000" 
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://dou_code_dba:Ahri34@@db:5432/dou_code
+  
+  users_service:
+    build: 
+      context: ./services/users_service
+    container_name: dou_code_users_service
+    image: dou-code-users_service
+    ports:
+      - "8001:8000" 
     depends_on:
       - db
     environment:
