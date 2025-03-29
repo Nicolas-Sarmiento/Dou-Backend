@@ -13,5 +13,4 @@ pub struct CreateUser {
     pub username: String,
     pub user_password: String,
     pub user_email: String,
-    pub user_role: i32,
 }
