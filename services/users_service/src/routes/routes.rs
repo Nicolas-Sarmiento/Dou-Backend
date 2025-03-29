@@ -1,8 +1,12 @@
-use axum::Router;
-use axum::routing::get;
+use axum::{
+    routing::{get, post, put, delete},
+    Router,
+};
+use crate::handlers::create_users::create_user;
 
 pub fn create_router() -> Router {
     Router::new()
-        .route("/", get(|| async { "Hello, World! from user service" }))
+        .route("/users", post(create_user))
 }
+
 
