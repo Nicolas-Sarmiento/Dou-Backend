@@ -7,7 +7,6 @@ pub async fn create_user(
     Extension(pool): Extension<PgPool>,
     Json(payload): Json<CreateUser>,
 ) -> Result<Json<User>, StatusCode> {
-    // Hashear la contraseña
     let hashed_password = hash(payload.user_password, DEFAULT_COST)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
