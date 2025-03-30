@@ -4,8 +4,6 @@ WORKDIR /app
 
 COPY ./Cargo.toml ./Cargo.lock ./
 
-COPY .sqlx .sqlx
-
 COPY ./src ./src
 
 RUN cargo build --release

@@ -11,6 +11,8 @@ services:
       - db
     environment:
       DATABASE_URL: postgres://dou_code_dba:Ahri34@@db:5432/dou_code
+    networks:
+      - dou_network
   
   users_service:
     build: 
@@ -23,6 +25,8 @@ services:
       - db
     environment:
       DATABASE_URL: postgres://dou_code_dba:Ahri34@@db:5432/dou_code
+    networks:
+      - dou_network
 
   db:
     build: 
@@ -36,6 +40,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dou_network
     
 volumes:
   postgres_data:
+
+networks:
+  dou_network: {}
