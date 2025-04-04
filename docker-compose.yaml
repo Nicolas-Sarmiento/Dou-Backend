@@ -1,16 +1,28 @@
 
 services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:80" 
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro  
+    depends_on:
+      - auth_service
+      - users_service
+    networks:
+      - dou_network
   auth_service:
     build: 
       context: ./services/auth_service
     container_name: dou_code_auth_service
     image: dou-code-auth_service
     ports:
-      - "8000:8000" 
+      - "8000" 
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgres://dou_code_dba:Ahri34@@db:5432/dou_code
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
     networks:
       - dou_network
   
@@ -20,11 +32,12 @@ services:
     container_name: dou_code_users_service
     image: dou-code-users_service
     ports:
-      - "8001:8000" 
+      - "8000" 
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgres://dou_code_dba:Ahri34@@db:5432/dou_code
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
     networks:
       - dou_network
 
@@ -33,9 +46,9 @@ services:
       context: ./db
     container_name: dou_code_db
     environment:
-      POSTGRES_USER: dou_code_dba
-      POSTGRES_PASSWORD: Ahri34@
-      POSTGRES_DB: dou_code
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:

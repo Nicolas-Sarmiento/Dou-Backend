@@ -1,8 +1,9 @@
 use axum::Router;
-use axum::routing::get;
+use axum::routing::post;
+use crate::handlers::auth_user::auth_user;
 
 pub fn create_router() -> Router {
     Router::new()
-        .route("/", get(|| async { "Hello, World! from auth service" }))
+        .route("/login", post(auth_user))
 }
 
