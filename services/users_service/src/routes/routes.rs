@@ -11,7 +11,7 @@ use crate::handlers::{
 
 pub fn create_router() -> Router {
     Router::new()
-        .route("/users", get(get_users) .post(create_user))
+        .route("/", get(get_users) .post(create_user))
         // .route("/users/:user_id", put(update_user)) 
         // .route("/users/:user_id", delete(delete_user)) 
 }
