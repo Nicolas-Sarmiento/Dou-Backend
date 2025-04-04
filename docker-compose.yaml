@@ -9,13 +9,15 @@ services:
     depends_on:
       - auth_service
       - users_service
+      - submission_service
+      - problem_service
     networks:
       - dou_network
   auth_service:
     build: 
       context: ./services/auth_service
     container_name: dou_code_auth_service
-    image: dou-code-auth_service
+    image: dou-code-auth-service
     ports:
       - "8000" 
     depends_on:
@@ -30,11 +32,44 @@ services:
     build: 
       context: ./services/users_service
     container_name: dou_code_users_service
-    image: dou-code-users_service
+    image: dou-code-users-service
     ports:
       - "8000" 
     depends_on:
       - db
+      - auth_service
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - dou_network
+
+  problem_service:
+    build: 
+      context: ./services/problem_service
+    container_name: dou_code_problem_service
+    image: dou-code-problem-service
+    ports:
+      - "8000" 
+    depends_on:
+      - db
+      - auth_service
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - dou_network
+
+  submission_service:
+    build: 
+      context: ./services/submission_service
+    container_name: dou_code_submission_service
+    image: dou-code-submission-service
+    ports:
+      - "8000" 
+    depends_on:
+      - db
+      - auth_service
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
@@ -50,7 +85,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -58,6 +93,7 @@ services:
     
 volumes:
   postgres_data:
+  problem_storage:
 
 networks:
   dou_network: {}
