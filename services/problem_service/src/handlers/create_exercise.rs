@@ -27,82 +27,64 @@ pub async fn create_problem(
         match field.name() {
             Some("name") => {
                 name = field.text().await.unwrap_or_default();
-                println!("Campo 'name' recibido: {}", name);
             }
             Some("t_limit") => {
                 let text = field.text().await.unwrap_or_default();
                 t_limit = text.parse().unwrap_or(0);
-                println!("Campo 't_limit' recibido: {}", t_limit);
             }
             Some("m_limit") => {
                 let text = field.text().await.unwrap_or_default();
                 m_limit = text.parse().unwrap_or(0);
-                println!("Campo 'm_limit' recibido: {}", m_limit);
             }
             Some("zip") => {
                 let bytes = field.bytes().await.unwrap_or_default();
-                println!("Archivo ZIP recibido, tamaño: {} bytes", bytes.len());
                 zip_data = Some(bytes);
             }
             Some(name) => {
-                println!("Campo ignorado: {}", name);
             }
             None => {
-                println!("Campo sin nombre recibido");
             }
         }
     }
 
     if !validate_limits(m_limit, t_limit) {
-        println!("Límites inválidos -> t_limit: {}, m_limit: {}", t_limit, m_limit);
         return Err(StatusCode::BAD_REQUEST);
     }
 
     let problem_id = Uuid::new_v4();
     let problem_path = format!("/app/problems/{}", problem_id);
-    println!("Creando carpeta para el problema en {}", problem_path);
 
     fs::create_dir_all(&problem_path)
         .await
         .map_err(|e| {
-            println!("Error al crear carpeta: {:?}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
     let zip_bytes = zip_data.ok_or_else(|| {
-        println!("No se recibió archivo ZIP");
         StatusCode::BAD_REQUEST
     })?;
 
     let zip_file_path = format!("{}/statement.zip", problem_path);
-    println!("Guardando ZIP en {}", zip_file_path);
 
     fs::write(&zip_file_path, &zip_bytes)
         .await
         .map_err(|e| {
-            println!("Error al escribir ZIP: {:?}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    println!("Extrayendo ZIP...");
     let zip_file = File::open(&zip_file_path).map_err(|e| {
-        println!("Error al abrir ZIP: {:?}", e);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     let mut archive = ZipArchive::new(zip_file).map_err(|e| {
-        println!("Error al leer ZIP: {:?}", e);
         StatusCode::BAD_REQUEST
     })?;
     archive.extract(&problem_path).map_err(|e| {
-        println!("Error al extraer ZIP: {:?}", e);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
     let statement_folder = Path::new(&problem_path).join("statement");
-    println!("Validando estructura en: {:?}", statement_folder);
 
     if !validate_test_cases_structure(&statement_folder) {
-        println!("Estructura inválida dentro de 'statement/'");
         return Err(StatusCode::BAD_REQUEST);
     }
 
@@ -110,7 +92,6 @@ pub async fn create_problem(
     let test_cases_url = format!("{}/statement/testCases", problem_path);
     let outputs_url = format!("{}/statement/outputs", problem_path);
 
-    println!("📤 Insertando en base de datos...");
     let query = "
     INSERT INTO problems (
         PROBLEM_NAME,
@@ -143,7 +124,6 @@ pub async fn create_problem(
 
     match result {
         Ok(row) => {
-            println!("Problema creado y almacenado correctamente.");
             let response = Problem {
                 problem_id: row.try_get("PROBLEM_ID").unwrap_or_default(),
                 problem_name: row.get("problem_name"),
@@ -156,7 +136,6 @@ pub async fn create_problem(
             Ok((StatusCode::CREATED, Json(response)))
         }
         Err(e) => {
-            println!("Error al insertar en la base de datos: {:?}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
