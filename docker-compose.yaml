@@ -76,7 +76,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
     volumes:
-      - problem_storage:/app/problems # ./problems/uuid/
+      - problem_storage:/app/problems
       
     networks:
       - dou_network
