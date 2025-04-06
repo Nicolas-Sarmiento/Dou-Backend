@@ -75,9 +75,10 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
+      - JUDGE_IP=${JUDGE_IP}
     volumes:
-      - problem_storage:/app/problems
-      
+      - problem_storage:/app/problems 
+      - submission_storage:/app/submissions
     networks:
       - dou_network
 
@@ -99,6 +100,7 @@ services:
 volumes:
   postgres_data:
   problem_storage:
+  submission_storage:
 
 networks:
   dou_network: {}

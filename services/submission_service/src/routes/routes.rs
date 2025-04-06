@@ -1,8 +1,9 @@
 use axum::Router;
-use axum::routing::get;
+use axum::routing::post;
+use crate::handlers::upload_code_handler::upload;
 
 pub fn create_router() -> Router {
     Router::new()
-        .route("/", get(|| async { "Hello from submission module"}))
+        .route("/", post(upload))
 }
 
