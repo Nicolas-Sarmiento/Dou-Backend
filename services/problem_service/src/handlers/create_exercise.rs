@@ -2,19 +2,21 @@ use axum::{
     extract::{Multipart, Extension},
     http::StatusCode,
     Json,
+    response::IntoResponse,
 };
 use sqlx::{PgPool, Row};
 use tokio::fs;
 use uuid::Uuid;
 use std::path::Path;
 use zip::ZipArchive;
-use std::fs::File;
 use std::io::Cursor;
 use serde_json::json;
-use axum::response::IntoResponse;
-use crate::models::models::{CreateProblem, Problem};
-use crate::utils::validations::{validate_limits, validate_test_cases_structure};
 
+use fs_extra::dir::copy as copy_dir;
+use fs_extra::file::copy as copy_file;
+
+use crate::models::models::{Problem};
+use crate::utils::validations::{validate_limits, validate_test_cases_structure};
 
 pub async fn create_problem(
     Extension(pool): Extension<PgPool>,
@@ -27,9 +29,7 @@ pub async fn create_problem(
 
     while let Some(field) = multipart.next_field().await.unwrap_or(None) {
         match field.name() {
-            Some("name") => {
-                name = field.text().await.unwrap_or_default();
-            }
+            Some("name") => name = field.text().await.unwrap_or_default(),
             Some("t_limit") => {
                 let text = field.text().await.unwrap_or_default();
                 t_limit = text.parse().unwrap_or(0);
@@ -67,52 +67,79 @@ pub async fn create_problem(
         )
     })?;
 
-    let problem_id = Uuid::new_v4();
-    let problem_path = format!("/app/problems/{}", problem_id);
+    let temp_id = Uuid::new_v4();
+    let temp_path = format!("/tmp/{}", temp_id);
 
-    fs::create_dir_all(&problem_path).await.map_err(|e| {
+    fs::create_dir_all(&temp_path).await.map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"error": format!("Failed to create directory: {}", e)})),
+            Json(json!({"error": format!("Failed to create temp directory: {}", e)})),
         )
     })?;
 
-    let zip_file_path = format!("{}/statement.zip", problem_path);
-    fs::write(&zip_file_path, &zip_bytes).await.map_err(|e| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"error": format!("Failed to save zip file: {}", e)})),
-        )
-    })?;
-
-    let zip_file = File::open(&zip_file_path).map_err(|e| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"error": format!("Failed to open zip file: {}", e)})),
-        )
-    })?;
-
-    let mut archive = ZipArchive::new(zip_file).map_err(|e| {
+    let cursor = Cursor::new(&zip_bytes);
+    let mut archive = ZipArchive::new(cursor).map_err(|e| {
         (
             StatusCode::BAD_REQUEST,
             Json(json!({"error": format!("Invalid zip file: {}", e)})),
         )
     })?;
 
-    archive.extract(&problem_path).map_err(|e| {
+    archive.extract(&temp_path).map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({"error": format!("Failed to extract zip: {}", e)})),
         )
     })?;
 
-    let statement_folder = Path::new(&problem_path).join("statement");
-    if !validate_test_cases_structure(&statement_folder) {
+    let statement_src = Path::new(&temp_path).join("statement");
+    if !validate_test_cases_structure(&statement_src) {
+        let _ = fs::remove_dir_all(&temp_path).await;
         return Err((
             StatusCode::BAD_REQUEST,
             Json(json!({"error": "Invalid folder structure. Make sure it includes statement.txt, testCases/ and outputs/."})),
         ));
     }
+
+    let problem_id = Uuid::new_v4();
+    let problem_path = format!("/app/problems/{}", problem_id);
+    let statement_dst = Path::new(&problem_path).join("statement");
+
+    fs::create_dir_all(&statement_dst).await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("Failed to create statement folder: {}", e)})),
+        )
+    })?;
+
+    let options = fs_extra::dir::CopyOptions::new();
+
+    copy_dir(&statement_src.join("testCases"), &statement_dst, &options).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("Failed to copy testCases: {}", e)})),
+        )
+    })?;
+
+    copy_dir(&statement_src.join("outputs"), &statement_dst, &options).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("Failed to copy outputs: {}", e)})),
+        )
+    })?;
+
+    copy_file(
+        &statement_src.join("statement.txt"),
+        &statement_dst.join("statement.txt"),
+        &fs_extra::file::CopyOptions::new(),
+    ).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("Failed to copy statement.txt: {}", e)})),
+        )
+    })?;
+
+    let _ = fs::remove_dir_all(&temp_path).await;
 
     let statement_url = format!("{}/statement/statement.txt", problem_path);
     let test_cases_url = format!("{}/statement/testCases", problem_path);
