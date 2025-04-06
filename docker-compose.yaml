@@ -79,7 +79,6 @@ services:
     volumes:
       - problem_storage:/app/problems 
       - submission_storage:/app/submissions
-      
     networks:
       - dou_network
 
