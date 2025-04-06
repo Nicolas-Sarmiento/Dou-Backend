@@ -151,7 +151,7 @@ pub async fn create_problem(
     match result {
         Ok(row) => {
             let response = Problem {
-                problem_id: row.try_get("PROBLEM_ID").unwrap_or_default(),
+                problem_id: row.get("problem_id"),
                 problem_name: row.get("problem_name"),
                 problem_statement_url: row.get("problem_statement_url"),
                 problem_test_cases_url: row.get("problem_test_cases_url"),
