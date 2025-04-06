@@ -6,14 +6,15 @@ pub fn validate_limits(memory: i32, time: i32) -> bool {
 }
 
 pub fn validate_test_cases_structure(problem_dir: &Path) -> bool {
+    let statement_path = problem_dir.join("statement.txt");
     let inputs_path = problem_dir.join("testCases");
     let outputs_path = problem_dir.join("outputs");
 
-    if !inputs_path.exists() || !outputs_path.exists() {
+    if !statement_path.exists() || !inputs_path.exists() || !outputs_path.exists() {
         return false;
     }
 
-    let Ok(input_files) = fs::read_dir(&inputs_path) else {
+    let Ok(input_files) = std::fs::read_dir(&inputs_path) else {
         return false;
     };
 
