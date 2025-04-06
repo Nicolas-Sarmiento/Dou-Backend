@@ -9,8 +9,6 @@ use crate::models::models::Problem;
 pub async fn get_problems(
     Extension(pool): Extension<PgPool>,
 ) -> Result<(StatusCode, Json<Vec<Problem>>), StatusCode> {
-    println!("🔎 Consultando todos los problemas...");
-
     let query = "
         SELECT
             problem_id,
