@@ -68,15 +68,17 @@ services:
     container_name: dou_code_submission_service
     image: dou-code-submission-service
     ports:
-      - "8000" 
+      - "8080" 
     depends_on:
       - db
       - auth_service
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
+      - JUDGE_URL=${JUDGE_URL}
     volumes:
-      - problem_storage:/app/problems # ./problems/uuid/
+      - problem_storage:/app/problems 
+      - submission_storage:/app/submissions
       
     networks:
       - dou_network
@@ -99,6 +101,7 @@ services:
 volumes:
   postgres_data:
   problem_storage:
+  submission_storage:
 
 networks:
   dou_network: {}
