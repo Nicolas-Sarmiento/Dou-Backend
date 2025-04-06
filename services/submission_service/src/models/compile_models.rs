@@ -38,6 +38,6 @@ pub struct CompileResponse {
     pub language: String,
     pub version: String,
     pub run: ResultObject,
-    pub compile: ResultObject,
+    pub compile: Option<ResultObject>,
 }
 

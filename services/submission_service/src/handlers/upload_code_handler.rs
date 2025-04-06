@@ -245,10 +245,10 @@ pub async fn upload(Extension(pool): Extension<PgPool>, mut multipart: Multipart
 
     let compile_result:Result<String,String> = compile(&judge_url, source, &test_cases_url, &outputs_url).await;
     
-    let veredict = compile_result.map_err( |_| {
+    let veredict = compile_result.map_err( |e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({ "error": "Cannot compile the source file!" }))
+            Json(json!({ "error": format!("Cannot compile the source file! Error: {}", e) }))
         ).into_response()
     })?;
 
@@ -325,11 +325,11 @@ async fn compile(judge_url: &str, source: CompileStruct ,inputs_url: &str, outpu
     let client = Client::new();
     let inputs = match load_cases(&inputs_url).await {
         Ok(mapa) => mapa,
-        Err(e) => return Err(format!("Error cargando inputs: {}", e)),
+        Err(e) => return Err(format!("Error loading inputs: {}", e)),
     };
     let outputs = match load_cases(&outputs_url).await {
         Ok(mapa) => mapa,
-        Err(e) => return Err(format!("Error cargando outputs: {}", e)),
+        Err(e) => return Err(format!("Error loading outputs: {}", e)),
     };
 
     let mut request = CompileRequest {
@@ -403,11 +403,14 @@ async fn load_cases(dir: &str) -> Result<HashMap<String, String>, String> {
 
 
 fn get_verdict(response: &CompileResponse, expected_output: &str, time_limit: i32, memory_limit: i32) -> String {
-    if let Some(run_code) = response.compile.code   {
-        if run_code != 0{
-            return "CE".into(); 
+    if let Some(compile) = &response.compile{
+        if let Some(run_code) = compile.code   {
+            if run_code != 0{
+                return "CE".into(); 
+            }
         }
     }
+
 
     let run = &response.run;
 
