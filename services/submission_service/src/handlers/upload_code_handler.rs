@@ -342,6 +342,7 @@ async fn compile(judge_url: &str, source: CompileStruct ,inputs_url: &str, outpu
         run_timeout: source.time_limit,
         run_memory_limit: source.memory_limit * 1024,
     };
+    println!("{}", source.source_code);
     print!("{}", judge_url);
     for (file, input) in &inputs {
         if let Some(expected_stdout) = outputs.get(file) {
@@ -358,10 +359,18 @@ async fn compile(judge_url: &str, source: CompileStruct ,inputs_url: &str, outpu
                 .await
                 .map_err(|e| format!("error sending sorce code to compile {e}"))?;
             
-            //let result = res.text().await.map_err(|e| format!("Error reading response text: {e}"))?;
-            let result: CompileResponse = res.json().await.map_err(|e| format!("Invalid response from judge {e}"))?;
+           
+            //let result1 = res1.text().await.map_err(|e| format!("Error reading response text: {e}"))?;
+            //let result: CompileResponse = res.json().await.map_err(|e| format!("Invalid response from judge {e}"))?;
+            let text = res.text().await.map_err(|e| format!("No se pudo leer el body: {e}"))?;
+            println!("Respuesta cruda del juez:\n{text}");
 
+            // Ahora convertís el texto en JSON
+            let result: CompileResponse = serde_json::from_str(&text)
+                .map_err(|e| format!("Respuesta inválida del juez: {e}"))?;
+            
             println!("{:?}", result);
+
 
             let result_case = get_verdict(&result, &expected_stdout, request.run_timeout,request. run_memory_limit);
             if result_case != "AC".to_string() {
