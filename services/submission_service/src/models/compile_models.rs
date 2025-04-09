@@ -20,8 +20,6 @@ pub struct CompileRequest {
     pub version:String,
     pub files: Vec<SourceFile>,
     pub stdin: String,
-    pub run_timeout: i32,
-    pub run_memory_limit: i32,
 }
 
 #[derive(Debug,Deserialize, Serialize)]

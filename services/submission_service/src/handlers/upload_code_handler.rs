@@ -339,8 +339,6 @@ async fn compile(judge_url: &str, source: CompileStruct ,inputs_url: &str, outpu
             content: source.source_code.clone(),
         }],
         stdin: String::new(), 
-        run_timeout: source.time_limit,
-        run_memory_limit: source.memory_limit * 1024,
     };
     println!("{}", source.source_code);
     print!("{}", judge_url);
@@ -372,7 +370,7 @@ async fn compile(judge_url: &str, source: CompileStruct ,inputs_url: &str, outpu
             println!("{:?}", result);
 
 
-            let result_case = get_verdict(&result, &expected_stdout, request.run_timeout,request. run_memory_limit);
+            let result_case = get_verdict(&result, &expected_stdout,source.time_limit,source.memory_limit);
             if result_case != "AC".to_string() {
                 return Ok(result_case)
             }
