@@ -24,6 +24,12 @@ pub struct UpdateUser {
     pub user_role: i32,
 }
 
+#[derive(Deserialize, Serialize)]
+pub struct UpdatePasswordRequest {
+    pub current_password: String,
+    pub new_password: String,
+}
+
 #[derive(Serialize)]
 pub struct DeleteResponse {
     pub message: String,
