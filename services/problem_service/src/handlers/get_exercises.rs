@@ -1,10 +1,10 @@
 use axum::{
-    extract::Extension,
+    extract::{Extension,Path},
     http::StatusCode,
     Json,
 };
+
 use sqlx::{PgPool, Row};
-use crate::models::models::Problem;
 use tokio::fs::read_to_string;
 use serde::Serialize;
 
@@ -62,6 +62,50 @@ pub async fn get_problems(
 
             Ok((StatusCode::OK, Json(problems)))
         }
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(_) => Err(StatusCode::NOT_FOUND),
+    }
+}
+
+pub async fn get_problems_by_id(
+    Extension(pool): Extension<PgPool>,
+    Path(id): Path<i32>
+) -> Result<(StatusCode, Json<ProblemWithStatement>), StatusCode> {
+    let query = "
+        SELECT
+            problem_id,
+            problem_name,
+            problem_statement_url,
+            problem_test_cases_url,
+            problem_outputs_url,
+            problem_memory_mb_limit,
+            problem_time_ms_limit
+        FROM problems
+        WHERE problem_id = $1;
+    ";
+
+    let row= sqlx::query(query)
+        .bind(id)
+        .fetch_one(&pool).await;
+
+    match row {
+        Ok(row) => {
+            let statement_path: String = row.get("problem_statement_url");
+            let statement_content = match read_to_string(&statement_path).await {
+                Ok(content) => content,
+                Err(_) => String::from("[Error al leer el statement.txt]"),
+            };
+
+            let problem = ProblemWithStatement { 
+                problem_id: row.get("problem_id"),
+                problem_name: row.get("problem_name"),
+                problem_statement: statement_content,
+                problem_test_cases_url: row.get("problem_test_cases_url"),
+                problem_outputs_url: row.get("problem_outputs_url"),
+                problem_memory_mb_limit: row.get("problem_memory_mb_limit"),
+                problem_time_ms_limit: row.get("problem_time_ms_limit"),
+            };
+            Ok((StatusCode::OK, Json(problem)))
+        }
+        Err(_) => Err(StatusCode::NOT_FOUND),
     }
 }
