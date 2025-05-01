@@ -105,10 +105,10 @@ pub async fn get_submission_by_id(
     }
 }
 
-pub async fn get_submission_by_user_id(
+pub async fn get_submissions_by_user_id(
     Extension(pool): Extension<PgPool>,
     Path(id): Path<i32>
-) -> Result<(StatusCode, Json<Submission>), StatusCode> {
+) -> Result<(StatusCode, Json<Vec<Submission>>), StatusCode> {
     let query = "
         SELECT
             submission_id,
@@ -121,30 +121,30 @@ pub async fn get_submission_by_user_id(
         ORDER BY submission_id ASC
     ";
 
-    let row = sqlx::query(query)
-        .bind(id)
-        .fetch_one(&pool)
-        .await;
+    let rows = sqlx::query(query).bind(id).fetch_all(&pool).await;
 
-    match row {
-        Ok(row) => {
-            let submission_path: String = row.get("submission_url");
+    match rows {
+        Ok(rows) => {
+            let mut submissions = Vec::new();
 
-            let submisssion_content_file = match read_to_string(&submission_path).await {
-                Ok(content) => content,
-                Err(_) => String::from("[Error al leer el envío]"),
-            };
+            for row in rows {
+                let submission_path: String = row.get("submission_url");
 
-            let submission = Submission {
-                submission_id: row.get("submission_id"),
-                user_id: row.get("user_id"),
-                problem_id: row.get("problem_id"),
-                submission_content: submisssion_content_file,
-                submission_answer_code: row.get("submission_answer_code"),
-            };
-            
+                let submisssion_content_file = match read_to_string(&submission_path).await {
+                    Ok(content) => content,
+                    Err(_) => String::from("[Error al leer el envío]"),
+                };
 
-            Ok((StatusCode::OK, Json(submission)))
+                submissions.push(Submission {
+                    submission_id: row.get("submission_id"),
+                    user_id: row.get("user_id"),
+                    problem_id: row.get("problem_id"),
+                    submission_content: submisssion_content_file,
+                    submission_answer_code: row.get("submission_answer_code"),
+                });
+            }
+
+            Ok((StatusCode::OK, Json(submissions)))
         }
         Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
     }
