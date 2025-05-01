@@ -105,6 +105,50 @@ pub async fn get_submission_by_id(
     }
 }
 
+pub async fn get_submission_by_user_id(
+    Extension(pool): Extension<PgPool>,
+    Path(id): Path<i32>
+) -> Result<(StatusCode, Json<Submission>), StatusCode> {
+    let query = "
+        SELECT
+            submission_id,
+            user_id,
+            problem_id,
+            submission_url,
+            submission_answer_code
+        FROM submissions
+        WHERE user_id = $1
+        ORDER BY submission_id ASC
+    ";
+
+    let row = sqlx::query(query)
+        .bind(id)
+        .fetch_one(&pool)
+        .await;
+
+    match row {
+        Ok(row) => {
+            let submission_path: String = row.get("submission_url");
+
+            let submisssion_content_file = match read_to_string(&submission_path).await {
+                Ok(content) => content,
+                Err(_) => String::from("[Error al leer el envío]"),
+            };
+
+            let submission = Submission {
+                submission_id: row.get("submission_id"),
+                user_id: row.get("user_id"),
+                problem_id: row.get("problem_id"),
+                submission_content: submisssion_content_file,
+                submission_answer_code: row.get("submission_answer_code"),
+            };
+            
+
+            Ok((StatusCode::OK, Json(submission)))
+        }
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
+}
 
 
 
