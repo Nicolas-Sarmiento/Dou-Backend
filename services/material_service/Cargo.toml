@@ -1,0 +1,23 @@
+[package]
+name = "dou_code_problem_service"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = { version = "0.8", features = ["multipart"] }
+tokio = { version = "1.39.3", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.8.3", features = ["runtime-tokio-rustls", "postgres", "uuid"] }
+dotenv = "0.15"
+hyper = { version = "1", features = ["server", "http1", "http2"] }
+bcrypt = "0.15"
+jsonwebtoken = "9.3.1"
+chrono = { version = "0.4.40", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+uuid = { version = "1", features = ["v4"] }
+zip = "0.6"
+futures = "0.3"
+walkdir = "2.4"
+fs_extra = "1.3"
