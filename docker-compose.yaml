@@ -81,6 +81,26 @@ services:
       - submission_storage:/app/submissions
     networks:
       - dou_network
+  
+  arena_service:
+    build: 
+      context: ./services/arena_service
+    container_name: dou_code_arena_service
+    image: dou-code-arena-service
+    ports:
+      - "8000" 
+    depends_on:
+      - db
+      - auth_service
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JUDGE_IP=${JUDGE_IP}
+    volumes:
+      - problem_storage:/app/problems 
+      - submission_storage:/app/submissions
+    networks:
+      - dou_network
 
   db:
     build: 
