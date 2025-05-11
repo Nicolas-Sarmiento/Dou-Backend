@@ -1,3 +1,3 @@
-pub mod create_exercise;
-pub mod get_exercises;
-pub mod delete_exercise;
+pub mod create_material;
+pub mod get_material;
+pub mod delete_material;

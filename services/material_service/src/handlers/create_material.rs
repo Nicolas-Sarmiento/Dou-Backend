@@ -7,7 +7,7 @@ use sqlx::{PgPool, Row};
 use std::{fs, path::PathBuf};
 use crate::models::{MaterialResponse, AttachmentResponse};
 
-pub async fn upload_material(
+pub async fn create_material(
     Extension(pool): Extension<PgPool>,
     mut multipart: Multipart,
 ) -> Result<(StatusCode, Json<MaterialResponse>), StatusCode> {
