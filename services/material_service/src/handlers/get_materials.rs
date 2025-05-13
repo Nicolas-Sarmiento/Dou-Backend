@@ -58,7 +58,7 @@ pub async fn get_materials(
 
                 materials.push(MaterialResponse {
                     material_id,
-                    description_path,
+                    description_path: description_content,
                     attachments,
                 });
             }
