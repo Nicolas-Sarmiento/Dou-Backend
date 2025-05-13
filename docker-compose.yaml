@@ -11,6 +11,7 @@ services:
       - users_service
       - submission_service
       - problem_service
+      - material_service
     networks:
       - dou_network
   auth_service:
@@ -84,7 +85,7 @@ services:
  
   material_service:
     build: 
-      context: ./services/dou_code_material_service
+      context: ./services/material_service
     container_name: dou_code_material_service
     image: dou-code-material-service
     ports:

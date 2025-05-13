@@ -2,35 +2,69 @@ use axum::{
     extract::{Extension, Multipart},
     http::StatusCode,
     Json,
+    response::IntoResponse,
 };
 use sqlx::{PgPool, Row};
-use std::{fs, path::PathBuf};
-use crate::models::{MaterialResponse, AttachmentResponse};
+use tokio::fs;
+use uuid::Uuid;
+use std::path::Path;
+
+use serde_json::json;
+use base64::engine::general_purpose::STANDARD as base64_engine;
+use base64::Engine as _;
+
+use crate::models::models::{MaterialResponse, AttachmentResponse};
 
 pub async fn create_material(
     Extension(pool): Extension<PgPool>,
     mut multipart: Multipart,
-) -> Result<(StatusCode, Json<MaterialResponse>), StatusCode> {
-    let material = sqlx::query("INSERT INTO materials (description_path) VALUES ('') RETURNING material_id")
+) -> Result<impl IntoResponse, impl IntoResponse> {
+    let row = sqlx::query("INSERT INTO materials (description_path) VALUES ('') RETURNING material_id")
         .fetch_one(&pool)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": format!("Database error on insert: {}", e)})),
+            )
+        })?;
 
-    let material_id: i32 = material.get("material_id");
+    let material_id: i32 = row.get("material_id");
+    let dir_path = format!("/app/materials/{}", material_id);
 
-    let dir_path = format!("./material{}", material_id);
-    fs::create_dir_all(&dir_path).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    fs::create_dir_all(&dir_path).await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("Failed to create directory: {}", e)})),
+        )
+    })?;
 
     let mut description_path: Option<String> = None;
     let mut attachments: Vec<AttachmentResponse> = Vec::new();
 
-    while let Some(field) = multipart.next_field().await.map_err(|_| StatusCode::BAD_REQUEST)? {
-        let name = field.name().unwrap_or_default();
+    while let Some(field) = multipart.next_field().await.map_err(|e| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": format!("Failed to read field: {}", e)})),
+        )
+    })? {
+        let name = field.name().unwrap_or("").to_string();
         let file_name = field.file_name().unwrap_or("file.dat").to_string();
-        let data = field.bytes().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+        let data = field.bytes().await.map_err(|e| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": format!("Failed to read file: {}", e)})),
+            )
+        })?;
 
         let save_path = format!("{}/{}", dir_path, file_name);
-        fs::write(&save_path, &data).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+        fs::write(&save_path, &data).await.map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": format!("Failed to save file: {}", e)})),
+            )
+        })?;
 
         if name == "description" && description_path.is_none() {
             description_path = Some(save_path.clone());
@@ -40,27 +74,46 @@ pub async fn create_material(
                 .bind(material_id)
                 .execute(&pool)
                 .await
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+                .map_err(|e| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(json!({"error": format!("Failed to update material: {}", e)})),
+                    )
+                })?;
         } else {
-            sqlx::query(
-                "INSERT INTO attachments (material_id, file_path, file_name) VALUES ($1, $2, $3)",
-            )
-            .bind(material_id)
-            .bind(&save_path)
-            .bind(&file_name)
-            .execute(&pool)
-            .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+            sqlx::query("INSERT INTO attachments (material_id, file_path, file_name) VALUES ($1, $2, $3)")
+                .bind(material_id)
+                .bind(&save_path)
+                .bind(&file_name)
+                .execute(&pool)
+                .await
+                .map_err(|e| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(json!({"error": format!("Failed to insert attachment: {}", e)})),
+                    )
+                })?;
+
+            let base64_content = match fs::read(&save_path).await {
+                Ok(bytes) => Some(base64_engine.encode(&bytes)),
+                Err(_) => None,
+            };
 
             attachments.push(AttachmentResponse {
                 file_name,
-                file_path: save_path,
+                base64_content,
             });
         }
     }
 
-    let Some(description_path) = description_path else {
-        return Err(StatusCode::BAD_REQUEST);
+    let description_path = match description_path {
+        Some(path) => path,
+        None => {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": "Missing required file: description"})),
+            ))
+        }
     };
 
     let response = MaterialResponse {
