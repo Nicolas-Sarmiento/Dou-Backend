@@ -13,3 +13,9 @@ pub struct MaterialResponse {
     pub attachments: Vec<AttachmentResponse>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct MaterialResponseIdOnly {
+    pub material_id: i32,
+    pub description_path: String,
+}
+

@@ -96,6 +96,8 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      - material_storage:/app/materials
     networks:
       - dou_network
 
@@ -118,6 +120,7 @@ volumes:
   postgres_data:
   problem_storage:
   submission_storage:
+  material_storage:
 
 networks:
   dou_network: {}
