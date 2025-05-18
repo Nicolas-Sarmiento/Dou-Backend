@@ -48,14 +48,17 @@ pub async fn create_material(
             Json(json!({"error": format!("Failed to read field: {}", e)})),
         )
     })? {
-        let name = field.name().unwrap_or("").to_string();
-        let file_name = field.file_name().unwrap_or("file.dat").to_string();
+        let file_name = field.file_name().unwrap_or("").to_string();
         let data = field.bytes().await.map_err(|e| {
             (
                 StatusCode::BAD_REQUEST,
                 Json(json!({"error": format!("Failed to read file: {}", e)})),
             )
         })?;
+
+        if data.is_empty() {
+            continue;
+        }
 
         let save_path = format!("{}/{}", dir_path, file_name);
 
@@ -66,7 +69,7 @@ pub async fn create_material(
             )
         })?;
 
-        if name == "description" && description_path.is_none() {
+        if file_name.to_lowercase().ends_with(".txt") && description_path.is_none() {
             description_path = Some(save_path.clone());
 
             sqlx::query("UPDATE materials SET description_path = $1 WHERE material_id = $2")
@@ -106,19 +109,23 @@ pub async fn create_material(
         }
     }
 
-    let description_path = match description_path {
-        Some(path) => path,
-        None => {
-            return Err((
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": "Missing required file: description"})),
-            ))
-        }
-    };
+    if description_path.is_none() {
+        let _ = fs::remove_dir_all(&dir_path).await;
+        let _ = sqlx::query("DELETE FROM materials WHERE material_id = $1")
+            .bind(material_id)
+            .execute(&pool)
+            .await;
+
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "Material must include at least one .txt file as description."})),
+        ));
+    }
+
 
     let response = MaterialResponse {
         material_id,
-        description_path,
+        description_path: description_path.unwrap(),
         attachments,
     };
 
