@@ -1,9 +1,9 @@
 use axum::Router;
-use axum::routing::post;
-use crate::handlers::auth_user::auth_user;
+use axum::routing::get;
+use crate::handlers::matchmaking::matchmaking;
 
 pub fn create_router() -> Router {
     Router::new()
-        .route("/login", post(auth_user))
+        .route("/look_match", get(matchmaking))
 }
 
