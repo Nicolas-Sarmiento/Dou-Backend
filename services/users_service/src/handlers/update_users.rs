@@ -9,28 +9,37 @@ pub async fn update_user(
     Path(user_id): Path<i32>,
     Json(payload): Json<UpdateUser>,
 ) -> Result<(StatusCode, Json<User>), StatusCode> {
-
     if !validate_username(&payload.username) {
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    if !validate_password(&payload.user_password) {
-        return Err(StatusCode::BAD_REQUEST);
-    }
+    // Obtener el hash de la contraseña del usuario desde la base de datos
+    let row = sqlx::query("SELECT user_password FROM users WHERE user_id = $1")
+        .bind(user_id)
+        .fetch_one(&pool)
+        .await
+        .map_err(|_| StatusCode::NOT_FOUND)?;
 
-    let hashed_password = hash(payload.user_password, DEFAULT_COST)
+    let stored_hash: String = row.get("user_password");
+
+    // Verificar que la contraseña proporcionada coincide con la almacenada
+    let password_matches = verify(&payload.user_password, &stored_hash)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
+    if !password_matches {
+        return Err(StatusCode::UNAUTHORIZED); // Contraseña incorrecta
+    }
+
+    // Actualizar los datos del usuario (excepto la contraseña)
     let query = "
         UPDATE users 
-        SET username = $1, user_password = $2, user_email = $3, user_role = $4
-        WHERE user_id = $5
+        SET username = $1, user_email = $2, user_role = $3
+        WHERE user_id = $4
         RETURNING user_id, username, user_email, user_role
     ";
 
     let updated_user = sqlx::query(query)
         .bind(payload.username)
-        .bind(hashed_password)
         .bind(payload.user_email)
         .bind(payload.user_role)
         .bind(user_id)
