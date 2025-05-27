@@ -3,17 +3,25 @@ use sqlx::{PgPool, Row};
 use bcrypt::{verify, hash, DEFAULT_COST};
 use crate::models::{User, UpdateUser, UpdatePasswordRequest};
 use crate::utils::validations::{validate_username, validate_password};
+use crate::utils::auth::AuthenticatedUser;
 
 pub async fn update_user(
+    AuthenticatedUser(claims): AuthenticatedUser,
     Extension(pool): Extension<PgPool>,
     Path(user_id): Path<i32>,
     Json(payload): Json<UpdateUser>,
 ) -> Result<(StatusCode, Json<User>), StatusCode> {
+    let is_self = claims.sub == user_id.to_string();
+    let is_admin = claims.role == "PROFESSOR";
+
+    if !is_self && !is_admin {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+
     if !validate_username(&payload.username) {
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    // Obtener el hash de la contraseña del usuario desde la base de datos
     let row = sqlx::query("SELECT user_password FROM users WHERE user_id = $1")
         .bind(user_id)
         .fetch_one(&pool)
@@ -22,15 +30,13 @@ pub async fn update_user(
 
     let stored_hash: String = row.get("user_password");
 
-    // Verificar que la contraseña proporcionada coincide con la almacenada
     let password_matches = verify(&payload.user_password, &stored_hash)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     if !password_matches {
-        return Err(StatusCode::UNAUTHORIZED); // Contraseña incorrecta
+        return Err(StatusCode::UNAUTHORIZED); 
     }
 
-    // Actualizar los datos del usuario (excepto la contraseña)
     let query = "
         UPDATE users 
         SET username = $1, user_email = $2, user_role = $3
@@ -64,10 +70,19 @@ pub async fn update_user(
 
 
 pub async fn update_user_password(
+    AuthenticatedUser(claims): AuthenticatedUser,
     Extension(pool): Extension<PgPool>,
     Path(user_id): Path<i32>,
     Json(payload): Json<UpdatePasswordRequest>,
 ) -> Result<(StatusCode, Json<User>), StatusCode> {
+
+    let is_self = claims.sub == user_id.to_string();
+    let is_admin = claims.role == "PROFESSOR";
+
+    if !is_self && !is_admin {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+
     if !validate_password(&payload.new_password) {
         return Err(StatusCode::BAD_REQUEST);
     }

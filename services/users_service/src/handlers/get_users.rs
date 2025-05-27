@@ -2,9 +2,11 @@ use axum::{extract::{Extension,Path}, Json, http::StatusCode};
 use sqlx::PgPool;
 use sqlx::Row;
 use crate::models::User;
+use crate::utils::auth::AuthenticatedUser;
 
 pub async fn get_users(
-    Extension(pool): Extension<PgPool>
+    Extension(pool): Extension<PgPool>,
+    _auth: AuthenticatedUser,
 ) -> Result<Json<Vec<User>>, StatusCode> {
     let q = "SELECT user_id, username, user_password, user_email, user_role FROM users";
     let query = sqlx::query(q);
@@ -28,7 +30,8 @@ pub async fn get_users(
 
 pub async fn get_user_by_id(
     Extension(pool): Extension<PgPool>,
-    Path(id): Path<i32>
+    Path(id): Path<i32>,
+    _auth: AuthenticatedUser,
 ) -> Result<Json<User>, StatusCode> {
     let q = "SELECT user_id, username, user_password, user_email, user_role FROM users WHERE user_id = $1";
     let query = sqlx::query(q);
