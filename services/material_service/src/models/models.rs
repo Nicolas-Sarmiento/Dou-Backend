@@ -19,3 +19,12 @@ pub struct MaterialResponseIdOnly {
     pub description_path: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub sub: String, 
+    pub name: String,
+    pub email : String,
+    pub role: String,
+    pub exp: usize,  
+}
+

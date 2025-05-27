@@ -14,11 +14,21 @@ use base64::engine::general_purpose::STANDARD as base64_engine;
 use base64::Engine as _;
 
 use crate::models::models::{MaterialResponse, AttachmentResponse};
+use crate::utils::auth::AuthenticatedUser;
 
 pub async fn create_material(
     Extension(pool): Extension<PgPool>,
+    AuthenticatedUser(claims): AuthenticatedUser,
     mut multipart: Multipart,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
+
+    if claims.role != "PROFESSOR" {
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(json!({ "error": "Unauthorized: only admins can create materials" })),
+        ));
+    }
+    
     let row = sqlx::query("INSERT INTO materials (description_path) VALUES ('') RETURNING material_id")
         .fetch_one(&pool)
         .await

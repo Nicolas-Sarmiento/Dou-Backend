@@ -8,11 +8,21 @@ use sqlx::PgPool;
 use tokio::fs;
 use std::path::Path as FilePath;
 use serde_json::json;
+use crate::utils::auth::AuthenticatedUser;
 
 pub async fn delete_material(
     Extension(pool): Extension<PgPool>,
+    AuthenticatedUser(claims): AuthenticatedUser,
     Path(id): Path<i32>,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
+    
+    if claims.role != "PROFESSOR" {
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(json!({ "error": "Unauthorized: only admins can create materials" })),
+        ));
+    }
+    
     sqlx::query("DELETE FROM attachments WHERE material_id = $1")
         .bind(id)
         .execute(&pool)

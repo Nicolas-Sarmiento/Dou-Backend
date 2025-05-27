@@ -7,11 +7,13 @@ use rand::seq::SliceRandom;
 use rand::thread_rng;
 use std::collections::HashMap;
 use axum::extract::Query;
+use crate::utils::auth::AuthenticatedUser;
 
 
 use crate::models::models::{MaterialResponse, AttachmentResponse, MaterialResponseIdOnly};
 
 pub async fn get_materials(
+    AuthenticatedUser(claims): AuthenticatedUser,
     Extension(pool): Extension<PgPool>,
 ) -> Result<(StatusCode, Json<Vec<MaterialResponse>>), StatusCode> {
     let query = "
@@ -74,6 +76,7 @@ pub async fn get_materials(
 }
 
 pub async fn get_material_by_id(
+    AuthenticatedUser(claims): AuthenticatedUser,
     Path(material_id): Path<i32>,
     Extension(pool): Extension<PgPool>,
 ) -> Result<(StatusCode, Json<MaterialResponse>), (StatusCode, Json<serde_json::Value>)> {
@@ -142,6 +145,7 @@ pub async fn get_material_by_id(
 }
 
 pub async fn get_materials_only_id(
+    AuthenticatedUser(claims): AuthenticatedUser,
     Extension(pool): Extension<PgPool>,
 ) -> Result<(StatusCode, Json<Vec<MaterialResponseIdOnly>>), StatusCode> {
     let query = "
@@ -182,6 +186,7 @@ pub async fn get_materials_only_id(
 }
 
 pub async fn search_materials_by_title(
+    AuthenticatedUser(claims): AuthenticatedUser,
     Extension(pool): Extension<PgPool>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Result<(StatusCode, Json<Vec<MaterialResponseIdOnly>>), StatusCode> {

@@ -12,12 +12,22 @@ use base64::engine::general_purpose::STANDARD as base64_engine;
 use base64::Engine as _;
 
 use crate::models::models::{MaterialResponse, AttachmentResponse};
+use crate::utils::auth::AuthenticatedUser;
 
 pub async fn update_material(
     Path(material_id): Path<i32>,
+    AuthenticatedUser(claims): AuthenticatedUser,
     Extension(pool): Extension<PgPool>,
     mut multipart: Multipart,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
+    
+    if claims.role != "PROFESSOR" {
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(json!({ "error": "Unauthorized: only admins can update materials" })),
+        ));
+    }
+    
     let dir_path = format!("/app/materials/{}", material_id);
 
     if !FilePath::new(&dir_path).exists() {
