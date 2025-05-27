@@ -71,3 +71,64 @@ pub async fn auth_user(
     }
 
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*; 
+    use axum::{Extension, Json};
+    use sqlx::{postgres::PgPoolOptions};
+    use std::env;
+    use crate::models::user_auth::LoginRequest;
+
+    #[tokio::test]
+    async fn test_auth_user_success() {
+
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+      
+        let payload = LoginRequest {
+            username: "elxokas12".to_string(),
+            user_password: "634tg283g@S".to_string(),
+        };
+
+
+        unsafe{env::set_var("JWT_SECRET", "clave_super_secreta");}
+
+        let response = auth_user(Extension(pool), Json(payload)).await;
+
+        assert!(response.is_ok(), "La autenticación no debería ser exitosa");
+
+        if let Ok(Json(token_response)) = response {
+            println!("Token generado: {}", token_response.token);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_auth_user_wrong_password() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        let payload = LoginRequest {
+            username: "elxokas12".to_string(),
+            user_password: "password_incorrecta".to_string(),
+        };
+
+        unsafe {
+         env::set_var("JWT_SECRET", "clave_super_secreta");   
+        }
+
+        let response = auth_user(Extension(pool), Json(payload)).await;
+
+        assert!(matches!(response, Err(StatusCode::UNAUTHORIZED)));
+    }
+}
+
