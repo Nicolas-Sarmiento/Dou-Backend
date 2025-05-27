@@ -14,3 +14,4 @@ hyper = { version = "1", features = ["server", "http1", "http2"] }
 bcrypt = "0.15"
 jsonwebtoken = "9.3.1"
 chrono = { version = "0.4.40", features = ["serde"] }
+

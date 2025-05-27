@@ -3,6 +3,7 @@ use tokio::net::TcpListener;
 use crate::routes::routes::create_router;
 
 mod handlers;
+mod utils;
 mod database;
 mod routes;
 mod models;

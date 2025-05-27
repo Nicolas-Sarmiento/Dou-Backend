@@ -28,3 +28,9 @@ pub struct Claims {
     pub role: String,
     pub exp: usize,  
 }
+
+
+#[derive(Debug, Serialize)]
+pub struct ValidationResponse {
+    pub valid: bool
+}
