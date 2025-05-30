@@ -23,7 +23,7 @@ pub async fn upload(Extension(pool): Extension<PgPool>, mut multipart: Multipart
     let mut avaliable_langs: HashMap<String, String> = HashMap::new();
     avaliable_langs.insert("cpp".to_string(), "10.2.0".to_string());
     avaliable_langs.insert("c".to_string(), "10.2.0".to_string());
-    avaliable_langs.insert("python".to_string(), "3.11.0".to_string());
+    avaliable_langs.insert("python".to_string(), "3.10.0".to_string());
     avaliable_langs.insert("java".to_string(), "15.0.2".to_string());
 
     let judge_ip = std::env::var("JUDGE_IP").map_err(|_| {
@@ -33,7 +33,7 @@ pub async fn upload(Extension(pool): Extension<PgPool>, mut multipart: Multipart
         ).into_response()
     })?;
 
-    let judge_url:String = format!("http://{}/api/v2/execute", judge_ip);
+    let judge_url:String = format!("{}", judge_ip);
 
     while let Some(field) = multipart
         .next_field()
