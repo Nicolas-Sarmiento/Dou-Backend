@@ -100,6 +100,21 @@ services:
       - material_storage:/app/materials
     networks:
       - dou_network
+  
+  arena_service:
+    build: 
+      context: ./services/arena_service
+    container_name: dou_code_arena_service
+    image: dou-code-arena-service
+    ports:
+      - "8000" 
+    depends_on:
+      - db
+      - auth_service
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    networks:
+      - dou_network
 
   frontend:
     image: joseslk/dou-frontend:latest
@@ -123,7 +138,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - "5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
