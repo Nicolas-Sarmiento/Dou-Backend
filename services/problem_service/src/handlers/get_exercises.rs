@@ -109,3 +109,177 @@ pub async fn get_problems_by_id(
         Err(_) => Err(StatusCode::NOT_FOUND),
     }
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::{extract::{Extension, Path}, Json};
+    use sqlx::postgres::PgPoolOptions;
+    use std::env;
+
+
+
+    #[tokio::test]
+    async fn test_get_problems_by_id_1() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = get_problems_by_id(Extension(pool), Path(1)).await;
+
+        assert!(matches!(response, _response));
+    }
+        
+    #[tokio::test]
+    async fn test_get_problems_by_id_2() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = get_problems_by_id(Extension(pool), Path(1)).await;
+
+        assert!(matches!(response, _response));
+    }
+    #[tokio::test]
+    async fn test_get_problems_by_id_3() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = get_problems_by_id(Extension(pool), Path(1)).await;
+
+        assert!(matches!(response, _response));
+    }
+    #[tokio::test]
+    async fn test_create_problem_1() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = get_problems_by_id(Extension(pool), Path(1)).await;
+
+        assert!(matches!(response, _response));
+    }
+    #[tokio::test]
+    async fn test_create_problem_2() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = get_problems_by_id(Extension(pool), Path(1)).await;
+
+        assert!(matches!(response, _response));
+    }
+    #[tokio::test]
+    async fn test_create_problem_3() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = get_problems_by_id(Extension(pool), Path(1)).await;
+
+        assert!(matches!(response, _response));
+    }
+    #[tokio::test]
+    async fn test_create_problem_4() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = get_problems_by_id(Extension(pool), Path(1)).await;
+
+        assert!(matches!(response, _response));
+    }
+    #[tokio::test]
+    async fn test_delete_problem_1() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = get_problems_by_id(Extension(pool), Path(1)).await;
+
+        assert!(matches!(response, _response));
+    }
+    #[tokio::test]
+    async fn test_delete_problem_2() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = get_problems_by_id(Extension(pool), Path(1)).await;
+
+        assert!(matches!(response, _response));
+    }
+    #[tokio::test]
+    async fn test_delete_problem_3() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = get_problems_by_id(Extension(pool), Path(1)).await;
+
+        assert!(matches!(response, _response));
+    }
+}

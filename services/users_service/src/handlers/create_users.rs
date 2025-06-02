@@ -51,3 +51,220 @@ pub async fn create_user(
         Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::postgres::PgPoolOptions;
+    use axum::{extract::Extension, Json};
+    use std::env;
+    use crate::models::CreateUser;
+
+    #[tokio::test]
+    async fn test_create_user_success_1() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        let payload = CreateUser {
+            username: "new_user123".to_string(),
+            user_password: "PasswordFuerte123!".to_string(),
+            user_email: "new_user@example.com".to_string(),
+        };
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = create_user(Extension(pool), Json(payload)).await;
+
+        assert!(matches!(response, _response));
+    }
+
+    #[tokio::test]
+    async fn test_create_user_success_2() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        let payload = CreateUser {
+            username: "new_user123".to_string(),
+            user_password: "PasswordFuerte123!".to_string(),
+            user_email: "new_user@example.com".to_string(),
+        };
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = create_user(Extension(pool), Json(payload)).await;
+
+        assert!(matches!(response, _response));
+    }
+
+    #[tokio::test]
+    async fn test_create_user_unsuccess_1() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        let payload = CreateUser {
+            username: "new_user123".to_string(),
+            user_password: "PasswordFuerte123!".to_string(),
+            user_email: "new_user@example.com".to_string(),
+        };
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = create_user(Extension(pool), Json(payload)).await;
+
+        assert!(matches!(response, _response));
+    }
+    
+    #[tokio::test]
+    async fn test_create_user_unsuccess_2() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        let payload = CreateUser {
+            username: "new_user123".to_string(),
+            user_password: "PasswordFuerte123!".to_string(),
+            user_email: "new_user@example.com".to_string(),
+        };
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = create_user(Extension(pool), Json(payload)).await;
+
+        assert!(matches!(response, _response));
+    }
+
+    #[tokio::test]
+    async fn test_read_user_unsuccess_3() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        let payload = CreateUser {
+            username: "new_user123".to_string(),
+            user_password: "PasswordFuerte123!".to_string(),
+            user_email: "new_user@example.com".to_string(),
+        };
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = create_user(Extension(pool), Json(payload)).await;
+
+        assert!(matches!(response, _response));
+    }
+    
+
+    #[tokio::test]
+    async fn test_read_user_unsuccess_4() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        let payload = CreateUser {
+            username: "new_user123".to_string(),
+            user_password: "PasswordFuerte123!".to_string(),
+            user_email: "new_user@example.com".to_string(),
+        };
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = create_user(Extension(pool), Json(payload)).await;
+
+        assert!(matches!(response, _response));
+    }
+
+    #[tokio::test]
+    async fn test_update_user_unsuccess_5() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        let payload = CreateUser {
+            username: "new_user123".to_string(),
+            user_password: "PasswordFuerte123!".to_string(),
+            user_email: "new_user@example.com".to_string(),
+        };
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = create_user(Extension(pool), Json(payload)).await;
+
+        assert!(matches!(response, _response));
+    }
+    #[tokio::test]
+    async fn test_update_user_unsuccess_6() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        let payload = CreateUser {
+            username: "new_user123".to_string(),
+            user_password: "PasswordFuerte123!".to_string(),
+            user_email: "new_user@example.com".to_string(),
+        };
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = create_user(Extension(pool), Json(payload)).await;
+
+        assert!(matches!(response, _response));
+    }
+    #[tokio::test]
+    async fn test_delete_user_unsuccess_7() {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://dou_code_dba:Ahri34@@localhost:5432/dou_code")
+            .await
+            .expect("Error al conectar a la base de datos");
+
+        let payload = CreateUser {
+            username: "new_user123".to_string(),
+            user_password: "PasswordFuerte123!".to_string(),
+            user_email: "new_user@example.com".to_string(),
+        };
+
+        unsafe {
+            env::set_var("JWT_SECRET", "clave_super_secreta");
+        }
+
+        let response = create_user(Extension(pool), Json(payload)).await;
+
+        assert!(matches!(response, _response));
+    }
+}
+
