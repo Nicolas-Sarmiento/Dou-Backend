@@ -4,9 +4,13 @@ export function handleWebSocketConnection(ws) {
   ws.on("message", (data) => {
     const message = JSON.parse(data);
 
+    //mensaje vacío o error de parseo.
+
     if (message.type === "join") {
       ws.userId = message.userId;
+      //Validar no inserta doble ID
       queue.push(ws);
+
 
       if (queue.length >= 2) {
         const userA = queue.shift();
@@ -16,6 +20,7 @@ export function handleWebSocketConnection(ws) {
     } else if (message.type === "submission") {
       const room = rooms.get(ws.roomId);
       if (!room) return;
+      //validar room
 
       const opponent = room.users.find(u => u !== ws);
       opponent.send(JSON.stringify({
@@ -24,14 +29,17 @@ export function handleWebSocketConnection(ws) {
       }));
     } else if (message.type === "verdict") {
       const room = rooms.get(ws.roomId);
+      const value = rooms.get(ws.value);
       if (!room) return;
+      //validar room existente
 
       const opponent = room.users.find(u => u !== ws);
 
       opponent.send(JSON.stringify({
         type: "verdict",
         from: ws.userId,
-        verdict: message.verdict
+        verdict: message.verdict,
+        verdict_value: value
       }));
 
       if (message.verdict === "AC") {
