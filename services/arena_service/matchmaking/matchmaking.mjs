@@ -21,6 +21,9 @@ export function createRoom(userA, userB) {
     userA.roomId = roomId;
     userB.roomId = roomId;
 
+    userA.ready = true;
+    userB.ready = true;
+
     userA.send(JSON.stringify({
       type: "start",
       roomId,

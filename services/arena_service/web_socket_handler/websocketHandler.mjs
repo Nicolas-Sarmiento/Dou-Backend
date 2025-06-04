@@ -3,6 +3,7 @@ import { queue, rooms, createRoom } from "../matchmaking/matchmaking.mjs";
 const activeUsers = new Set();
 
 export function handleWebSocketConnection(ws) {
+  ws.ready = false;
   ws.on("message", (data) => {
     let message;
 
@@ -20,6 +21,7 @@ export function handleWebSocketConnection(ws) {
         ws.send(JSON.stringify({ type: "error", message: "Usuario ya conectado." }));
         return;
       }
+      queue.push(ws)
 
       activeUsers.add(ws.userId);
 
@@ -29,20 +31,35 @@ export function handleWebSocketConnection(ws) {
         createRoom(userA, userB);
       }
     } else if (message.type === "submission") {
-      const room = rooms.get(ws.roomId);
-      if (!room) return;
-      //validar room
+      if (!ws.roomId || !rooms.has(ws.roomId)) {
+        ws.send(JSON.stringify({ type: "error", message: "Sala no encontrada o aún no asignada." }));
+        return;
+      }
 
+      if (message.roomId !== ws.roomId) {
+        ws.send(JSON.stringify({ type: "error", message: "No estás autorizado para enviar datos a esta sala." }));
+        return;
+      }
+
+      const room = rooms.get(ws.roomId);
       const opponent = room.users.find(u => u !== ws);
+
       opponent.send(JSON.stringify({
         type: "submission",
         from: ws.userId
       }));
     } else if (message.type === "verdict") {
+      if (!ws.ready || !ws.roomId || !rooms.has(ws.roomId)) {
+        ws.send(JSON.stringify({ type: "error", message: "Sala no encontrada o aún no asignada." }));
+        return;
+      }
+
+      if (message.roomId !== ws.roomId) {
+        ws.send(JSON.stringify({ type: "error", message: "No estás autorizado para enviar datos a esta sala." }));
+        return;
+      }
       const room = rooms.get(ws.roomId);
       const value = rooms.get(ws.value);
-      if (!room) return;
-      //validar room existente
 
       const opponent = room.users.find(u => u !== ws);
 
@@ -66,6 +83,11 @@ export function handleWebSocketConnection(ws) {
   ws.on("close", () => {
     if (ws.userId && activeUsers.has(ws.userId)) {
     activeUsers.delete(ws.userId);
+    }
+
+    const indexInQueue = queue.indexOf(ws);
+    if (indexInQueue !== -1) {
+      queue.splice(indexInQueue, 1);
     }
 
     if (ws.roomId && rooms.has(ws.roomId)) {
