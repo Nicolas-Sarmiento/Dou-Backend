@@ -4,13 +4,21 @@ export function handleWebSocketConnection(ws) {
   ws.on("message", (data) => {
     const message = JSON.parse(data);
 
-    //mensaje vacío o error de parseo.
+    try {
+      message = JSON.parse(data);
+    } catch (e) {
+      console.error("Mensaje inválido recibido:", data);
+      return;
+    }
 
     if (message.type === "join") {
       ws.userId = message.userId;
-      //Validar no inserta doble ID
-      queue.push(ws);
 
+      const validateId  = queue.some(user => user.userId === ws.userId)
+
+      if(!validateId) {
+        queue.push(ws);
+      }
 
       if (queue.length >= 2) {
         const userA = queue.shift();
