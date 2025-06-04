@@ -1,24 +1,27 @@
 import { queue, rooms, createRoom } from "../matchmaking/matchmaking.mjs";
 
+const activeUsers = new Set();
+
 export function handleWebSocketConnection(ws) {
   ws.on("message", (data) => {
-    const message = JSON.parse(data);
+    let message;
 
     try {
       message = JSON.parse(data);
-    } catch (e) {
-      console.error("Mensaje inválido recibido:", data);
+    } catch (error) {
+      ws.send(JSON.stringify({ type: "error", message: "Formato JSON inválido." }));
       return;
     }
 
     if (message.type === "join") {
       ws.userId = message.userId;
 
-      const validateId  = queue.some(user => user.userId === ws.userId)
-
-      if(!validateId) {
-        queue.push(ws);
+      if (activeUsers.has(ws.userId)) {
+        ws.send(JSON.stringify({ type: "error", message: "Usuario ya conectado." }));
+        return;
       }
+
+      activeUsers.add(ws.userId);
 
       if (queue.length >= 2) {
         const userA = queue.shift();
@@ -61,6 +64,10 @@ export function handleWebSocketConnection(ws) {
   });
 
   ws.on("close", () => {
+    if (ws.userId && activeUsers.has(ws.userId)) {
+    activeUsers.delete(ws.userId);
+    }
+
     if (ws.roomId && rooms.has(ws.roomId)) {
       const room = rooms.get(ws.roomId);
       room.users.forEach(u => {
