@@ -30,6 +30,11 @@ pub struct UpdatePasswordRequest {
     pub new_password: String,
 }
 
+#[derive(serde::Serialize)]
+pub struct UsernameOnly {
+    pub username: String,
+}
+
 #[derive(Serialize)]
 pub struct DeleteResponse {
     pub message: String,
