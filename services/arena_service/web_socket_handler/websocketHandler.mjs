@@ -68,15 +68,6 @@ export function handleWebSocketConnection(ws) {
       }));
 
     } else if (message.type === "verdict") {
-      if (!ws.ready || !ws.roomId || !rooms.has(ws.roomId)) {
-        ws.send(JSON.stringify({ type: "error", message: "Sala no encontrada o aún no asignada." }));
-        return;
-      }
-
-      if (message.roomId !== ws.roomId) {
-        ws.send(JSON.stringify({ type: "error", message: "No estás autorizado para enviar datos a esta sala." }));
-        return;
-      }
 
       const room = rooms.get(ws.roomId);
       const value = rooms.get(ws.value); 
@@ -119,6 +110,7 @@ export function handleWebSocketConnection(ws) {
       const room = rooms.get(ws.roomId);
       room.users.forEach(u => {
         if (u !== ws) u.send(JSON.stringify({ type: "opponent_disconnected" }));
+        u.close();
       });
       rooms.delete(ws.roomId);
     }
