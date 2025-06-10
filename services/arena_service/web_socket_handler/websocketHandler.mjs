@@ -2,8 +2,25 @@ import { queue, rooms, createRoom } from "../matchmaking/matchmaking.mjs";
 
 const activeUsers = new Set();
 
+function startKeepAlive(ws) {
+  const interval = setInterval(() => {
+    if (ws.readyState === ws.OPEN) {
+      ws.send(JSON.stringify({ type: "ping" }));
+    }
+  }, 30000);
+
+  ws.keepAliveInterval = interval;
+}
+
+function stopKeepAlive(ws) {
+  if (ws.keepAliveInterval) {
+    clearInterval(ws.keepAliveInterval);
+  }
+}
+
 export function handleWebSocketConnection(ws) {
   ws.ready = false;
+
   ws.on("message", (data) => {
     let message;
 
@@ -21,8 +38,8 @@ export function handleWebSocketConnection(ws) {
         ws.send(JSON.stringify({ type: "error", message: "Usuario ya conectado." }));
         return;
       }
-      queue.push(ws)
 
+      queue.push(ws);
       activeUsers.add(ws.userId);
 
       if (queue.length >= 2) {
@@ -30,6 +47,7 @@ export function handleWebSocketConnection(ws) {
         const userB = queue.shift();
         createRoom(userA, userB);
       }
+
     } else if (message.type === "submission") {
       if (!ws.roomId || !rooms.has(ws.roomId)) {
         ws.send(JSON.stringify({ type: "error", message: "Sala no encontrada o aún no asignada." }));
@@ -48,6 +66,7 @@ export function handleWebSocketConnection(ws) {
         type: "submission",
         from: ws.userId
       }));
+
     } else if (message.type === "verdict") {
       if (!ws.ready || !ws.roomId || !rooms.has(ws.roomId)) {
         ws.send(JSON.stringify({ type: "error", message: "Sala no encontrada o aún no asignada." }));
@@ -58,9 +77,9 @@ export function handleWebSocketConnection(ws) {
         ws.send(JSON.stringify({ type: "error", message: "No estás autorizado para enviar datos a esta sala." }));
         return;
       }
-      const room = rooms.get(ws.roomId);
-      const value = rooms.get(ws.value);
 
+      const room = rooms.get(ws.roomId);
+      const value = rooms.get(ws.value); 
       const opponent = room.users.find(u => u !== ws);
 
       opponent.send(JSON.stringify({
@@ -71,18 +90,24 @@ export function handleWebSocketConnection(ws) {
       }));
 
       if (message.verdict === "AC") {
-        room.users.forEach(u => u.send(JSON.stringify({
-          type: "winner",
-          winner: ws.userId
-        })));
+        room.users.forEach(u => {
+          u.send(JSON.stringify({
+            type: "winner",
+            winner: ws.userId
+          }));
+          u.close();
+        });
+
         rooms.delete(ws.roomId);
       }
     }
   });
 
   ws.on("close", () => {
+    stopKeepAlive(ws); 
+
     if (ws.userId && activeUsers.has(ws.userId)) {
-    activeUsers.delete(ws.userId);
+      activeUsers.delete(ws.userId);
     }
 
     const indexInQueue = queue.indexOf(ws);
@@ -98,4 +123,7 @@ export function handleWebSocketConnection(ws) {
       rooms.delete(ws.roomId);
     }
   });
+
+  startKeepAlive(ws);
 }
+

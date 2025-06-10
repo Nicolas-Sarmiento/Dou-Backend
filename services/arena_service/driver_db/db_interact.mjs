@@ -8,5 +8,5 @@ export async function getRandomProblemId() {
         order: sequelize.random(),
         raw: true,
     });
-    return randomProblem ? randomProblem.id : null;
+    return randomProblem ? randomProblem.problem_id : null;
 }
