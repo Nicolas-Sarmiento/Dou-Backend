@@ -1,6 +1,6 @@
 import { queue, rooms, createRoom } from "../matchmaking/matchmaking.mjs";
 
-const activeUsers = new Set();
+const activeUsers = new Map();
 
 function startKeepAlive(ws) {
   const interval = setInterval(() => {
@@ -35,12 +35,16 @@ export function handleWebSocketConnection(ws) {
       ws.userId = message.userId;
 
       if (activeUsers.has(ws.userId)) {
-        ws.send(JSON.stringify({ type: "error", message: "Usuario ya conectado." }));
-        return;
+        const existingWs = activeUsers.get(ws.userId);
+
+        if (existingWs.readyState === existingWs.OPEN) {
+          existingWs.send(JSON.stringify({ type: "error", message: "Conexión duplicada. Cerrando la anterior." }));
+          existingWs.close();
+        }
       }
 
+      activeUsers.set(ws.userId, ws);
       queue.push(ws);
-      activeUsers.add(ws.userId);
 
       if (queue.length >= 2) {
         const userA = queue.shift();
@@ -95,9 +99,7 @@ export function handleWebSocketConnection(ws) {
   });
 
   ws.on("close", () => {
-    stopKeepAlive(ws); 
-
-    if (ws.userId && activeUsers.has(ws.userId)) {
+    if (ws.userId && activeUsers.get(ws.userId) === ws) {
       activeUsers.delete(ws.userId);
     }
 
@@ -110,7 +112,6 @@ export function handleWebSocketConnection(ws) {
       const room = rooms.get(ws.roomId);
       room.users.forEach(u => {
         if (u !== ws) u.send(JSON.stringify({ type: "opponent_disconnected" }));
-        u.close();
       });
       rooms.delete(ws.roomId);
     }
